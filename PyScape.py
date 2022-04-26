@@ -1,16 +1,22 @@
 import os
+from os import walk
 import random
 import time as t
-from PIL import ImageGrab
-import keyboard as k
 import win32api
 import win32com.client
 import win32con
 import win32gui
-from pynput.keyboard import Key, Listener as keyL
-from pynput.mouse import Listener as mouseL
-import numpy as np
+
 import cv2 as cv
+import keyboard as k
+import numpy as np
+import pytesseract
+from PIL import ImageGrab
+from matplotlib import pyplot as plt
+from pynput.keyboard import Listener as keyL
+from pynput.mouse import Listener as mouseL
+
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Pexo\AppData\Local\tesseract\Tesseract-OCR\tesseract.exe'
 
 
 def winFix(clientwindow):
@@ -66,13 +72,23 @@ def click(x, y):
 
 def vidcapswitch():
     vidcap = True
-    ooo = 0
     while vidcap:
-        timer = cv.getTickCount()
-        ss = np.array(ImageGrab.grab(bbox=(0, 0, 800, 600)))
-        fps = cv.getTickFrequency()/(cv.getTickCount()-timer)
-        cv.putText(ss, str(fps),(25, 30),cv.FONT_HERSHEY_SIMPLEX,0.7,(0,0,255))
-        #ss = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
+        ss = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
+        # fps = cv.getTickFrequency() / (cv.getTickCount() - timer)
+        # cv.putText(ss, str(fps), (25, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255))
+        ssg = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
+        filepath = next(walk(r'imageres\all'), (None, None, []))[2]
+        for imgsrc in enumerate(filepath):
+            targpath = "C:\\PyProjects\\PyScape\\PyScape\\imageres\\all\\" + imgsrc[1]
+            targ = cv.imread(str(targpath), 0)
+            w, h = targ.shape[::-1]
+            res = cv.matchTemplate(ssg, targ, cv.TM_CCOEFF_NORMED)
+            thresh = 0.80
+            loc = np.where(res >= thresh)
+            for pt in zip(*loc[::-1]):
+                cv.rectangle(ss, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
+                print(pt[0], pt[1])
+            cv.imwrite('res.png', ss)
         cv.imshow('Runelite Source', ss)
         if cv.waitKey(25) & 0xFF == ord('q'):
             cv.destroyAllWindows()
@@ -123,7 +139,7 @@ def on_click(x, y, button, pressed):
                 yy = tb[x3] + random.randint(-4, 4)
                 x3 += 1
                 click(xx, yy)
-                print("Clicked X: ", xx, " Y: ", yy)
+                print(f"Clicked X: {xx}, Y: {yy}")
                 if sl is None:
                     sl = task
                     for k in range(0, sl - 1):
@@ -140,7 +156,7 @@ def login():
     print("Logging in.")
     t.sleep(1)
     click(466, 320)
-    k.write("", 0.1)
+    k.write("", 0.1)  # edit password here
     t.sleep(1)
     click(305, 349)
     t.sleep(7)
@@ -150,16 +166,23 @@ def login():
     print("Done.")
 
 
+def close():
+    print("ESC Pressed, Closing Script")
+    os._exit(0)
+
+
+hotkeys = {
+    '<105>': login,
+    '<104>': vidcapswitch,
+    'Key.esc': close
+}
+
+
 def on_press(key):
-    if str(key) == '<105>':
-        login()
-    elif str(key) == '<104>':
-        vidcapswitch()
-    elif key == Key.esc:
-        print("ESC Pressed, Closing Script")
-        os._exit(0)
+    if hotkeys.get(str(key)) in hotkeys.values():
+        hotkeys.get(str(key))()
     else:
-        print("Press 'ESC' to close script")
+        print("Unknown HK Detected")
 
 
 listener1 = mouseL(on_click=on_click)
