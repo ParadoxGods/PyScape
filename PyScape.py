@@ -8,15 +8,10 @@ import win32con
 import win32gui
 
 import cv2 as cv
-import keyboard as k
 import numpy as np
-import pytesseract
 from PIL import ImageGrab
-from matplotlib import pyplot as plt
 from pynput.keyboard import Listener as keyL
 from pynput.mouse import Listener as mouseL
-
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Pexo\AppData\Local\tesseract\Tesseract-OCR\tesseract.exe'
 
 
 def winFix(clientwindow):
@@ -55,7 +50,13 @@ while True:
 tb = []  # click coordinates
 td = []  # time delays to set each click
 tds = []  # Saves state of the previous time.
+invT = []
+oorc = []
+mlogs = 0
+oocc = {}
 delay = {}  # Time delays in dictionary form
+countclick = 0
+counters = 0
 
 
 def move(x, y):
@@ -71,10 +72,14 @@ def click(x, y):
 
 
 def vidcapswitch():
+    global oocc
+    global countclick
+    global counters
+    global mlogs
     vidcap = True
     while vidcap:
+        tlogs = 0
         ss = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
-        # fps = cv.getTickFrequency() / (cv.getTickCount() - timer)
         # cv.putText(ss, str(fps), (25, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255))
         ssg = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
         filepath = next(walk(r'imageres\all'), (None, None, []))[2]
@@ -87,12 +92,48 @@ def vidcapswitch():
             loc = np.where(res >= thresh)
             for pt in zip(*loc[::-1]):
                 cv.rectangle(ss, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
-                print(pt[0], pt[1])
-            cv.imwrite('res.png', ss)
-        cv.imshow('Runelite Source', ss)
+                ooll = [pt[0], pt[1], pt[0] + w, pt[1] + h]
+                oocc[imgsrc[1]] = ooll
+                if str(imgsrc[1] == "mage_logs.png"):
+                    tlogs += 1
+        if tlogs is not mlogs:
+            mlogs = tlogs
+            print(f"Mage Logs: {mlogs}")
+            # ls = oocc[imgsrc[1]]
         if cv.waitKey(25) & 0xFF == ord('q'):
             cv.destroyAllWindows()
             vidcap = False
+
+
+"""         
+                elif ls in invT:
+                    for mageGone in enumerate(invT):
+                        mgg = mageGone[1]
+                        mg = np.array(ImageGrab.grab(bbox=(mgg[0], mgg[1], mgg[2], mgg[3])))
+                        mmg = cv.cvtColor(mg, cv.COLOR_BGR2GRAY)
+                        matched = cv.matchTemplate(mmg, targ, cv.TM_CCOEFF_NORMED)
+                        if matched.item(0, 0) <= 0.10:
+                            try:
+                                if mgg in invT:
+                                    invT.remove(ls)
+                                    inv -= 1
+                                    print("Mage Log Gone")
+                                continue
+                            except ValueError as pp:
+                                print(pp, "Errrrrr")
+                                invT.pop(len(invT)-1)
+                if countclick >= 10:
+                    x = (ls[2] + ls[0]) / 2
+                    x = int(x)
+                    y = (ls[3] + ls[1]) / 2
+                    y = int(y)
+                    # click(x, y)
+                    countclick = 0
+                    print(f'Sent 1 Click to X: {x}, Y:{y} : Found"{imgsrc[1]}"')
+            countclick += 1
+             cv.imwrite('res.png', ss)
+         cv.imshow('Runelite Source', ss)
+        """
 
 
 def on_click(x, y, button, pressed):
@@ -116,10 +157,6 @@ def on_click(x, y, button, pressed):
     if pressed is True and trt is True and button is button.x2:  # Front Side will start script
         print("script is starting in 5 seconds")
         t.sleep(5)
-        print("TB: ", tb)
-        print("TD: ", td)
-        print("TDS: ", tds)
-        print("Delay: ", delay)
         for o in range(0, 60000):
             ll = random.randint(20, 55)
             if random.randint(0, 10000) > 9900:  # this is a random chance of standing at bank
@@ -153,17 +190,7 @@ def on_click(x, y, button, pressed):
 
 
 def login():
-    print("Logging in.")
-    t.sleep(1)
-    click(466, 320)
-    k.write("", 0.1)  # edit password here
-    t.sleep(1)
-    click(305, 349)
-    t.sleep(7)
-    click(390, 359)
-    t.sleep(1)
-    click(732, 17)
-    print("Done.")
+    print(oocc)
 
 
 def close():
