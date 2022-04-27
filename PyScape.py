@@ -74,6 +74,7 @@ tb = []  # click coordinates
 td = []  # time delays to set each click
 tds = []  # Saves state of the previous time.
 oorc = []
+items_to_find = []
 mlogs = 0
 oocc = {}
 delay = {}  # Time delays in dictionary form
@@ -98,32 +99,39 @@ def vidcapswitch():
     global countclick
     global counters
     global mlogs
+    while True:
+        try:
+            itemf = input("Enter item ID to find: ")
+            if itemf.isnumeric():
+                itemf = str(itemf)
+                itemf += ".png"
+                items_to_find.append(itemf)
+                print(f"Adding {itemf} to list.")
+                continue
+            if itemf.isalpha() and "done" or "end" or "exit":
+                print("done")
+                break
+        except ValueError:
+            print("try numbers only")
+            continue
     vidcap = True
     while vidcap:
         tlogs = 0
         ss = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
         # cv.putText(ss, str(fps), (25, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255))
         ssg = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
-        filepath = next(walk(r'imageres\alll'), (None, None, []))[2]
-        for imgsrc in enumerate(filepath):
+        for imgsrc in enumerate(items_to_find):
             targpath = "C:\\PyProjects\\PyScape\\PyScape\\imageres\\alll\\" + imgsrc[1]
-            targ = cv.imread(str(targpath), 0)
-            print(targpath)
-            print(targ)
+            targ = cv.imread(targpath, 0)
             w, h = targ.shape[::-1]
             res = cv.matchTemplate(ssg, targ, cv.TM_CCOEFF_NORMED)
-            thresh = 0.80
+            thresh = 0.90
             loc = np.where(res >= thresh)
             for pt in zip(*loc[::-1]):
                 cv.rectangle(ss, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
                 # ooll = [pt[0], pt[1], pt[0] + w, pt[1] + h]
                 # oocc[imgsrc[1]] = ooll
                 # print(oocc)
-                if filepath == "1513":
-                    tlogs += 1
-            if tlogs is not mlogs:
-                mlogs = tlogs
-                print(f"Mage Logs: {mlogs}")
         cv.imwrite('res.png', ss)
         cv.putText(ss, f"Mage Logs: {mlogs}", (580, 480), cv.FONT_HERSHEY_SIMPLEX, 0.7, (120, 50, 120), 2)
         cv.imshow('Big Brother', ss)
