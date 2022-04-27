@@ -22,9 +22,31 @@ def winFix(clientwindow):
     win32gui.SetForegroundWindow(hwnd)
 
 
-print("Mouse Event Python Auto Clicker")
-print("Script is designated to use the side buttons of your mouse.")
-print("Press 'Numpad 9' to auto-login")
+def oplisten():
+    listener2 = mouseL(on_click=on_click)
+    listener2.start()
+    listener2.join()
+
+
+while True:
+    try:
+        opflop = str(input("Enable the autoclicker? (y, n) : "))
+        if not opflop.isalpha():
+            print("Yes or No doesn't have 1's or 0's.")
+            continue
+        if opflop[0].lower() == "y":
+            oplisten()
+            print("Autoclicker enabled.")
+        if opflop[0].lower() == "n":
+            print("Autoclicker disabled.")
+        break
+    except ValueError:
+        print("[Y]es, [N]o")
+        continue
+
+
+print("OSRS Object Detection and Autoclicker")
+print("press 'Numpad 8' to start Object Detection")
 print("Press 'ESC' to close program.")
 
 while True:
@@ -47,10 +69,10 @@ while True:
         print("Client Name Not Found, check spelling")
         print(e)
         continue
+# Vars
 tb = []  # click coordinates
 td = []  # time delays to set each click
 tds = []  # Saves state of the previous time.
-invT = []
 oorc = []
 mlogs = 0
 oocc = {}
@@ -82,24 +104,29 @@ def vidcapswitch():
         ss = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
         # cv.putText(ss, str(fps), (25, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255))
         ssg = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
-        filepath = next(walk(r'imageres\all'), (None, None, []))[2]
+        filepath = next(walk(r'imageres\alll'), (None, None, []))[2]
         for imgsrc in enumerate(filepath):
-            targpath = "C:\\PyProjects\\PyScape\\PyScape\\imageres\\all\\" + imgsrc[1]
+            targpath = "C:\\PyProjects\\PyScape\\PyScape\\imageres\\alll\\" + imgsrc[1]
             targ = cv.imread(str(targpath), 0)
+            print(targpath)
+            print(targ)
             w, h = targ.shape[::-1]
             res = cv.matchTemplate(ssg, targ, cv.TM_CCOEFF_NORMED)
             thresh = 0.80
             loc = np.where(res >= thresh)
             for pt in zip(*loc[::-1]):
                 cv.rectangle(ss, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
-                ooll = [pt[0], pt[1], pt[0] + w, pt[1] + h]
-                oocc[imgsrc[1]] = ooll
-                if str(imgsrc[1] == "mage_logs.png"):
+                # ooll = [pt[0], pt[1], pt[0] + w, pt[1] + h]
+                # oocc[imgsrc[1]] = ooll
+                # print(oocc)
+                if filepath == "1513":
                     tlogs += 1
-        if tlogs is not mlogs:
-            mlogs = tlogs
-            print(f"Mage Logs: {mlogs}")
-            # ls = oocc[imgsrc[1]]
+            if tlogs is not mlogs:
+                mlogs = tlogs
+                print(f"Mage Logs: {mlogs}")
+        cv.imwrite('res.png', ss)
+        cv.putText(ss, f"Mage Logs: {mlogs}", (580, 480), cv.FONT_HERSHEY_SIMPLEX, 0.7, (120, 50, 120), 2)
+        cv.imshow('Big Brother', ss)
         if cv.waitKey(25) & 0xFF == ord('q'):
             cv.destroyAllWindows()
             vidcap = False
@@ -131,8 +158,7 @@ def vidcapswitch():
                     countclick = 0
                     print(f'Sent 1 Click to X: {x}, Y:{y} : Found"{imgsrc[1]}"')
             countclick += 1
-             cv.imwrite('res.png', ss)
-         cv.imshow('Runelite Source', ss)
+
         """
 
 
@@ -160,15 +186,14 @@ def on_click(x, y, button, pressed):
         for o in range(0, 60000):
             ll = random.randint(20, 55)
             if random.randint(0, 10000) > 9900:  # this is a random chance of standing at bank
-                print("script waiting for:", ll, "seconds")
+                print(f"script waiting for: {ll} seconds")
                 for j in range(0, ll - 1):
                     xr = random.randint(0, 1920)
                     yr = random.randint(0, 1080)
-                    print("Moving mouse to (", xr, ",", yr, ")")
+                    print(f"Moving mouse to (X: {xr}, Y:{yr})")
                     move(xr, yr)
                     t.sleep(1)
             x3 = 0
-            x4 = 0
             for x4 in range(0, len(delay) + 1):
                 sl = delay.get(x4)
                 xx = tb[x3] + random.randint(-4, 4)
@@ -182,7 +207,7 @@ def on_click(x, y, button, pressed):
                     for k in range(0, sl - 1):
                         xr = random.randint(0, 1920)
                         yr = random.randint(0, 1080)
-                        print("Moving mouse to (", xr, ",", yr, ")")
+                        print(f"Moving mouse to (X: {xr}, Y: {yr})")
                         move(xr, yr)
                         t.sleep(1)
                 else:
@@ -190,7 +215,7 @@ def on_click(x, y, button, pressed):
 
 
 def login():
-    print(oocc)
+    print("Not Implemented.")
 
 
 def close():
@@ -198,23 +223,19 @@ def close():
     os._exit(0)
 
 
-hotkeys = {
-    '<105>': login,
-    '<104>': vidcapswitch,
-    'Key.esc': close
-}
-
-
 def on_press(key):
+    hotkeys = {
+        '<105>': login,
+        '<104>': vidcapswitch,
+        'Key.esc': close
+    }
     if hotkeys.get(str(key)) in hotkeys.values():
         hotkeys.get(str(key))()
     else:
+        print(key)
         print("Unknown HK Detected")
 
 
-listener1 = mouseL(on_click=on_click)
-listener2 = keyL(on_press=on_press)
+listener1 = keyL(on_press=on_press)
 listener1.start()
-listener2.start()
 listener1.join()
-listener2.join()

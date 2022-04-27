@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="55a19b01-7994-4e87-bdd1-77dcd3f559dc" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PyScape.py" beforeDir="false" afterPath="$PROJECT_DIR$/PyScape.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/res.png" beforeDir="false" afterPath="$PROJECT_DIR$/res.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/res1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/res2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/res3.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,5 +84,16 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
