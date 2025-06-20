@@ -73,10 +73,7 @@ while True:
 tb = []  # click coordinates
 td = []  # time delays to set each click
 tds = []  # Saves state of the previous time.
-oorc = []
-items_to_find = []
 mlogs = 0
-oocc = {}
 delay = {}  # Time delays in dictionary form
 countclick = 0
 counters = 0
@@ -95,79 +92,64 @@ def click(x, y):
 
 
 def vidcapswitch():
-    global oocc
-    global countclick
-    global counters
-    global mlogs
-    while True:
-        try:
-            itemf = input("Enter item ID to find: ")
-            if itemf.isnumeric():
-                itemf = str(itemf)
-                itemf += ".png"
-                items_to_find.append(itemf)
-                print(f"Adding {itemf} to list.")
-                continue
-            if itemf.isalpha() and "done" or "end" or "exit":
-                print("done")
-                break
-        except ValueError:
-            print("try numbers only")
-            continue
+    """Capture the client window and perform template matching using edge
+    detection. This function will attempt to run close to 60 FPS and will
+    automatically load any new ``.png`` files placed inside the
+    ``imageres/items`` directory."""
+
+    # Cache of template name -> edge image
+    templates = {}
+
+    template_dir = os.path.join(os.path.dirname(__file__), "imageres", "items")
+
+    def load_templates():
+        """Load any new templates from disk using edge detection."""
+        for root, _dirs, files in os.walk(template_dir):
+            for f in files:
+                if not f.lower().endswith(".png"):
+                    continue
+                if f in templates:
+                    continue
+                path = os.path.join(root, f)
+                img = cv.imread(path, cv.IMREAD_GRAYSCALE)
+                if img is None:
+                    continue
+                edge = cv.Canny(img, 50, 200)
+                templates[f] = edge
+
+    load_templates()
     vidcap = True
     while vidcap:
-        tlogs = 0
-        ss = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
-        # cv.putText(ss, str(fps), (25, 30), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255))
-        ssg = cv.cvtColor(ss, cv.COLOR_BGR2GRAY)
-        for imgsrc in enumerate(items_to_find):
-            targpath = "C:\\PyProjects\\PyScape\\PyScape\\imageres\\alll\\" + imgsrc[1]
-            targ = cv.imread(targpath, 0)
-            w, h = targ.shape[::-1]
-            res = cv.matchTemplate(ssg, targ, cv.TM_CCOEFF_NORMED)
-            thresh = 0.90
-            loc = np.where(res >= thresh)
+        start = t.time()
+
+        # refresh template cache in case new sprites were added
+        load_templates()
+
+        frame = np.array(ImageGrab.grab(bbox=(0, 0, 775, 535)))
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        edge_frame = cv.Canny(gray, 50, 200)
+
+        for name, templ in templates.items():
+            h, w = templ.shape[:2]
+            res = cv.matchTemplate(edge_frame, templ, cv.TM_CCOEFF_NORMED)
+            loc = np.where(res >= 0.6)
             for pt in zip(*loc[::-1]):
-                cv.rectangle(ss, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
-                # ooll = [pt[0], pt[1], pt[0] + w, pt[1] + h]
-                # oocc[imgsrc[1]] = ooll
-                # print(oocc)
-        cv.imwrite('res.png', ss)
-        cv.putText(ss, f"Mage Logs: {mlogs}", (580, 480), cv.FONT_HERSHEY_SIMPLEX, 0.7, (120, 50, 120), 2)
-        cv.imshow('Big Brother', ss)
-        if cv.waitKey(25) & 0xFF == ord('q'):
+                cv.rectangle(frame, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 1)
+
+        cv.putText(frame, f"Templates: {len(templates)}", (10, 20),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1)
+
+        cv.imshow('Big Brother', frame)
+        if cv.waitKey(1) & 0xFF == ord('q'):
             cv.destroyAllWindows()
             vidcap = False
+            break
 
-
-"""         
-                elif ls in invT:
-                    for mageGone in enumerate(invT):
-                        mgg = mageGone[1]
-                        mg = np.array(ImageGrab.grab(bbox=(mgg[0], mgg[1], mgg[2], mgg[3])))
-                        mmg = cv.cvtColor(mg, cv.COLOR_BGR2GRAY)
-                        matched = cv.matchTemplate(mmg, targ, cv.TM_CCOEFF_NORMED)
-                        if matched.item(0, 0) <= 0.10:
-                            try:
-                                if mgg in invT:
-                                    invT.remove(ls)
-                                    inv -= 1
-                                    print("Mage Log Gone")
-                                continue
-                            except ValueError as pp:
-                                print(pp, "Errrrrr")
-                                invT.pop(len(invT)-1)
-                if countclick >= 10:
-                    x = (ls[2] + ls[0]) / 2
-                    x = int(x)
-                    y = (ls[3] + ls[1]) / 2
-                    y = int(y)
-                    # click(x, y)
-                    countclick = 0
-                    print(f'Sent 1 Click to X: {x}, Y:{y} : Found"{imgsrc[1]}"')
-            countclick += 1
-
-        """
+        # Maintain ~60 FPS
+        elapsed = t.time() - start
+        delay = max(1.0 / 60 - elapsed, 0)
+        if delay:
+            t.sleep(delay)
 
 
 def on_click(x, y, button, pressed):
